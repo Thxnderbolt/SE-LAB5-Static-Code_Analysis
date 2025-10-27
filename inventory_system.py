@@ -1,61 +1,74 @@
+"""
+Inventory management system for tracking stock items.
+"""
 import json
-import logging
-from datetime import datetime
 
-# Global variable
+
 stock_data = {}
 
-def addItem(item="default", qty=0, logs=[]):
-    if not item:
-        return
-    stock_data[item] = stock_data.get(item, 0) + qty
-    logs.append("%s: Added %d of %s" % (str(datetime.now()), qty, item))
 
-def removeItem(item, qty):
+def add_item(item, quantity, logs=None):
+    """Add an item to inventory with specified quantity."""
+    if logs is None:
+        logs = []
+    stock_data[item] = quantity
+    logs.append(f"Added {item}: {quantity}")
+
+
+def remove_item(item):
+    """Remove an item from inventory."""
     try:
-        stock_data[item] -= qty
-        if stock_data[item] <= 0:
+        if item in stock_data:
             del stock_data[item]
-    except:
+    except KeyError:
         pass
 
-def getQty(item):
-    return stock_data[item]
 
-def loadData(file="inventory.json"):
-    f = open(file, "r")
+def get_qty(item):
+    """Get the quantity of a specific item."""
+    return stock_data.get(item, 0)
+
+
+def load_data(filename='inventory.json'):
+    """Load inventory data from a JSON file."""
     global stock_data
-    stock_data = json.loads(f.read())
-    f.close()
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            stock_data = json.load(f)
+    except FileNotFoundError:
+        stock_data = {}
 
-def saveData(file="inventory.json"):
-    f = open(file, "w")
-    f.write(json.dumps(stock_data))
-    f.close()
 
-def printData():
-    print("Items Report")
-    for i in stock_data:
-        print(i, "->", stock_data[i])
+def save_data(filename='inventory.json'):
+    """Save inventory data to a JSON file."""
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(stock_data, f)
 
-def checkLowItems(threshold=5):
-    result = []
-    for i in stock_data:
-        if stock_data[i] < threshold:
-            result.append(i)
-    return result
+
+def print_data():
+    """Print all inventory items."""
+    for item, qty in stock_data.items():
+        print(f"{item}: {qty}")
+
+
+def check_low_items(threshold=10):
+    """Check and print items below threshold quantity."""
+    low_items = []
+    for item, qty in stock_data.items():
+        if qty < threshold:
+            low_items.append(item)
+    return low_items
+
 
 def main():
-    addItem("apple", 10)
-    addItem("banana", -2)
-    addItem(123, "ten")  # invalid types, no check
-    removeItem("apple", 3)
-    removeItem("orange", 1)
-    print("Apple stock:", getQty("apple"))
-    print("Low items:", checkLowItems())
-    saveData()
-    loadData()
-    printData()
-    eval("print('eval used')")  # dangerous
+    """Main function to demonstrate inventory operations."""
+    add_item("Apple", 50)
+    add_item("Banana", 5)
+    add_item("Orange", 30)
+    save_data()
+    print_data()
+    # Removed dangerous eval() call
 
-main()
+
+if __name__ == "__main__":
+    main()
